@@ -69,6 +69,8 @@ public class AuthorizationServerConfig {
 
         return registeredClientRepository;
     }
+//                    .redirectUri("http://127.0.0.1:8080/login/oauth2/code/chart-client-oidc")
+//                .redirectUri("http://127.0.0.1:8080/authorized")
 
     @Bean
     public OAuth2AuthorizationService authorizationService(JdbcTemplate jdbcTemplate, RegisteredClientRepository registeredClientRepository) {

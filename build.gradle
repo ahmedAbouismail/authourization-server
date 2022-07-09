@@ -12,14 +12,20 @@ repositories {
     mavenCentral()
 }
 
-repositories {
-    mavenCentral()
+ext {
+    springCloudVersion = "2021.0.3"
+}
+
+jar {
+    enabled = false
 }
 
 dependencies {
     implementation "org.springframework.boot:spring-boot-starter-web"
+//    implementation 'org.springframework.cloud:spring-cloud-starter-config'
     implementation "org.springframework.boot:spring-boot-starter-security"
     implementation "org.springframework.boot:spring-boot-starter-jdbc"
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
     implementation 'org.springframework.security:spring-security-oauth2-authorization-server:0.2.2'
     runtimeOnly "com.h2database:h2"
 
@@ -27,4 +33,10 @@ dependencies {
     testImplementation "org.springframework.security:spring-security-test"
     testImplementation "junit:junit"
     testImplementation "net.sourceforge.htmlunit:htmlunit"
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
 }
