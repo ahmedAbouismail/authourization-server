@@ -1,38 +1,57 @@
 package htw.berlin.authserver.authorizationserver.config;
 
+import htw.berlin.authserver.authorizationserver.services.AppUserDetailsService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.web.SecurityFilterChain;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
 @EnableWebSecurity
-public class DefaultSecurityConfig {
+public class DefaultSecurityConfig  {
 
+
+    @Autowired
+    private AppUserDetailsService appUserDetailsService;
+
+//    @Override
+//    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+//        auth.userDetailsService(appUserDetailsService);
+//    }
 
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests(authorizeRequests ->
-                        authorizeRequests.anyRequest().authenticated()
+                        authorizeRequests
+                                .antMatchers("/login").permitAll()
+                                .antMatchers("/login.html").permitAll()
+                                .antMatchers("/login-error.html").permitAll()
+                                .antMatchers("/sign-up/**").permitAll()
+                                .antMatchers("/sign-up.html").permitAll()
+                                .anyRequest().authenticated()
                 )
-                .formLogin(withDefaults());
+                .formLogin()
+                .loginPage("/login.html")
+                .failureUrl("/login-error.html")
+                .and()
+                .logout()
+                .logoutSuccessUrl("http://localhost:8080/index.html");
+//                .formLogin(withDefaults());
         return http.build();
     }
 
-    @Bean
-    UserDetailsService users() {
-        UserDetails user = User.withDefaultPasswordEncoder()
-                .username("user1")
-                .password("password")
-                .roles("USER")
-                .build();
-        return new InMemoryUserDetailsManager(user);
-    }
+//    @Bean
+//    UserDetailsService users() {
+//        UserDetails user = User.withDefaultPasswordEncoder()
+//                .username("user1")
+//                .password("password")
+//                .roles("USER")
+//                .build();
+//        return new InMemoryUserDetailsManager(user);
+//    }
 
 }

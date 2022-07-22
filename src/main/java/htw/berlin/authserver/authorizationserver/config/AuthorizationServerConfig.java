@@ -8,6 +8,9 @@ import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 
 import htw.berlin.authserver.authorizationserver.jose.Jwks;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -18,6 +21,7 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
@@ -36,14 +40,28 @@ import org.springframework.security.web.authentication.LoginUrlAuthenticationEnt
 @Configuration(proxyBeanMethods = false)
 public class AuthorizationServerConfig {
 
+    private static final Logger LOG = LoggerFactory.getLogger(AuthorizationServerConfig.class);
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
         http
-                .exceptionHandling(exceptions ->
-                        exceptions.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
+                .exceptionHandling(exceptions -> {
+                            exceptions.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login.html"));
+                        }
                 );
+//
+//        http
+//                .exceptionHandling(exceptions -> {
+//                            LOG.warn(exceptions.toString());
+//                            exceptions.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"));
+//                        }
+//                );
+
         return http.build();
     }
 
@@ -51,7 +69,7 @@ public class AuthorizationServerConfig {
     public RegisteredClientRepository registeredClientRepository(JdbcTemplate jdbcTemplate) {
         RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
                 .clientId("chart-client")
-                .clientSecret("{noop}secret")
+                .clientSecret(passwordEncoder.encode("secret"))
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
@@ -91,18 +109,19 @@ public class AuthorizationServerConfig {
 
     @Bean
     public ProviderSettings providerSettings() {
+//        return ProviderSettings.builder().issuer("http://auth-server:9000").build();
         return ProviderSettings.builder().issuer("http://localhost:9000").build();
     }
 
-    @Bean
-    public EmbeddedDatabase embeddedDatabase() {
-        return new EmbeddedDatabaseBuilder()
-                .generateUniqueName(true)
-                .setType(EmbeddedDatabaseType.H2)
-                .setScriptEncoding("UTF-8")
-                .addScript("org/springframework/security/oauth2/server/authorization/oauth2-authorization-schema.sql")
-                .addScript("org/springframework/security/oauth2/server/authorization/oauth2-authorization-consent-schema.sql")
-                .addScript("org/springframework/security/oauth2/server/authorization/client/oauth2-registered-client-schema.sql")
-                .build();
-    }
+//    @Bean
+//    public EmbeddedDatabase embeddedDatabase() {
+//        return new EmbeddedDatabaseBuilder()
+//                .setName("registered-client-db")
+//                .setType(EmbeddedDatabaseType.H2)
+//                .setScriptEncoding("UTF-8")
+//                .addScript("org/springframework/security/oauth2/server/authorization/oauth2-authorization-schema.sql")
+//                .addScript("org/springframework/security/oauth2/server/authorization/oauth2-authorization-consent-schema.sql")
+//                .addScript("org/springframework/security/oauth2/server/authorization/client/oauth2-registered-client-schema.sql")
+//                .build();
+//    }
 }
